@@ -46,5 +46,6 @@ Carthage/Build
 Package.pins
 Package.resolved
 .build
+/*.xcodeproj
 
 # *** End Swift Package Manager ***
