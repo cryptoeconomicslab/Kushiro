@@ -21,7 +21,6 @@ before_install:
   - if [ $TRAVIS_OS_NAME == "osx" ]; then instruments -s devices; fi
   - if [ $TRAVIS_OS_NAME == "osx" ]; then gem install cocoapods; fi # Since Travis is not always on latest version
   - if [ $TRAVIS_OS_NAME == "osx" ]; then pod repo update; fi
-  # - if [ $TRAVIS_OS_NAME == "osx" ]; then pod install --project-directory=Example; fi
   - if [ $TRAVIS_OS_NAME == "osx" ]; then
       echo "macOS build. swiftenv will not be installed.";
     else
@@ -32,7 +31,6 @@ before_install:
 
       swiftenv install $(cat .swift-version);
     fi
-  - if [ $TRAVIS_OS_NAME == "osx" ]; then gem install slather; fi
 script:
   # Output something every 10 minutes or Travis kills the job
   - while sleep 60; do echo "=====[ $SECONDS seconds still running ]====="; done &
@@ -43,7 +41,8 @@ script:
   - swift build
   - swift build -c release
   - if [ $TRAVIS_OS_NAME == "osx" ]; then
-      swift test --enable-code-coverage;
+      swift package generate-xcodeproj
+      xcodebuild test -scheme Rester -destination platform="macOS" -enableCodeCoverage YES -derivedDataPath .build/derivedData
     else
       swift test;
     fi
@@ -51,6 +50,5 @@ script:
   - kill %1
 after_success:
   - if [ $TRAVIS_OS_NAME == "osx" ]; then
-      slather;
-      bash <(curl -s https://codecov.io/bash) -f test-reports/cobertura.xml -X coveragepy -X gcov -X xcode;
+      bash <(curl -s https://codecov.io/bash) -J '^Kushiro$' -D .build/derivedData;
     fi
