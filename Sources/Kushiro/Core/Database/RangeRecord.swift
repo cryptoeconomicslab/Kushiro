@@ -47,9 +47,9 @@ extension RangeRecord: Codable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        self.start = try keyFromString(string: container.decode(String.self, forKey: .start))
-        self.end = try keyFromString(string: container.decode(String.self, forKey: .end))
-        self.value = try keyFromString(string: container.decode(String.self, forKey: .end))
+        self.start = try Self.keyFromString(string: container.decode(String.self, forKey: .start))
+        self.end = try Self.keyFromString(string: container.decode(String.self, forKey: .end))
+        self.value = try Self.keyFromString(string: container.decode(String.self, forKey: .end))
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -68,7 +68,7 @@ extension RangeRecord: Codable {
         return converted.hexEncodedString()
     }
 
-    private func keyFromString<Key: RocksDBValueConvertible>(string: String) throws -> Key {
+    private static func keyFromString<Key: RocksDBValueConvertible>(string: String) throws -> Key {
         let converted = string.hexDecodedData()
 
         return try Key.init(data: converted)

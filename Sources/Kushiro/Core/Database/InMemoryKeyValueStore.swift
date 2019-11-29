@@ -39,4 +39,8 @@ public struct InMemoryKeyValueStore: KeyValueStore {
     public func sequence<Value: RocksDBValueConvertible>(valueType: Value.Type, lte: String) throws -> RocksDBSequence<String, Value> {
         return rocksDB.sequence(lte: lte)
     }
+
+    public func batch<Value: RocksDBValueConvertible>(valueType: Value.Type, operations: [RocksDBBatchOperation<Value>]) throws {
+        return try rocksDB.batch(operations: operations)
+    }
 }

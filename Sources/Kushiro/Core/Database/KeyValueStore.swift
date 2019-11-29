@@ -19,6 +19,8 @@ public protocol KeyValueStore {
     func sequence<Value: RocksDBValueConvertible>(valueType: Value.Type, gte: String) throws -> RocksDBSequence<String, Value>
 
     func sequence<Value: RocksDBValueConvertible>(valueType: Value.Type, lte: String) throws -> RocksDBSequence<String, Value>
+
+    func batch<Value: RocksDBValueConvertible>(valueType: Value.Type, operations: [RocksDBBatchOperation<Value>]) throws
 }
 
 public extension KeyValueStore {
@@ -33,5 +35,9 @@ public extension KeyValueStore {
 
     func sequence<Value: RocksDBValueConvertible>(lte: String) throws -> RocksDBSequence<String, Value> {
         return try sequence(valueType: Value.self, lte: lte)
+    }
+
+    func batch<Value: RocksDBValueConvertible>(operations: [RocksDBBatchOperation<Value>]) throws {
+        return try batch(valueType: Value.self, operations: operations)
     }
 }
