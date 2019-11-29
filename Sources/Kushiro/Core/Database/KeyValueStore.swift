@@ -10,16 +10,28 @@ import RocksDB
 
 public protocol KeyValueStore {
 
-    associatedtype Key: RocksDBValueConvertible
-    associatedtype Value: RocksDBValueConvertible
+    func get<Value: RocksDBValueConvertible>(valueType: Value.Type, key: String) throws -> Value
 
-    func get(key: Key) throws -> Value
+    func put<Value: RocksDBValueConvertible>(key: String, value: Value) throws
 
-    func put(key: Key, value: Value) throws
+    func del(key: String) throws
 
-    func del(key: Key) throws
+    func sequence<Value: RocksDBValueConvertible>(valueType: Value.Type, gte: String) throws -> RocksDBSequence<String, Value>
 
-    func sequence(gte: Key) throws -> RocksDBSequence<Key, Value>
+    func sequence<Value: RocksDBValueConvertible>(valueType: Value.Type, lte: String) throws -> RocksDBSequence<String, Value>
+}
 
-    func sequence(lte: Key) throws -> RocksDBSequence<Key, Value>
+public extension KeyValueStore {
+
+    func get<Value: RocksDBValueConvertible>(key: String) throws -> Value {
+        return try get(valueType: Value.self, key: key)
+    }
+
+    func sequence<Value: RocksDBValueConvertible>(gte: String) throws -> RocksDBSequence<String, Value> {
+        return try sequence(valueType: Value.self, gte: gte)
+    }
+
+    func sequence<Value: RocksDBValueConvertible>(lte: String) throws -> RocksDBSequence<String, Value> {
+        return try sequence(valueType: Value.self, lte: lte)
+    }
 }
