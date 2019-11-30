@@ -21,7 +21,8 @@ before_install:
   - if [ $TRAVIS_OS_NAME == "osx" ]; then instruments -s devices; fi
   - if [ $TRAVIS_OS_NAME == "osx" ]; then gem install cocoapods; fi # Since Travis is not always on latest version
   - if [ $TRAVIS_OS_NAME == "osx" ]; then pod repo update; fi
-  - if [ $TRAVIS_OS_NAME == "osx" ]; then
+  - |
+    if [ $TRAVIS_OS_NAME == "osx" ]; then
       echo "macOS build. swiftenv will not be installed.";
     else
       git clone https://github.com/kylef/swiftenv.git ~/.swiftenv;
@@ -35,20 +36,26 @@ script:
   # Output something every 10 minutes or Travis kills the job
   - while sleep 60; do echo "=====[ $SECONDS seconds still running ]====="; done &
   # Actual script
-  - if [ $TRAVIS_OS_NAME == "osx" ]; then
-      pod lib lint --allow-warnings;
+  - |
+    if [ $TRAVIS_OS_NAME == "osx" ]; then
+      # TODO: Will be activated once rocksdb.swift works on Cocoapods
+      # pod spec lint --allow-warnings;
     fi
   - swift build
   - swift build -c release
-  - if [ $TRAVIS_OS_NAME == "osx" ]; then
-      swift package generate-xcodeproj
-      xcodebuild test -scheme Rester -destination platform="macOS" -enableCodeCoverage YES -derivedDataPath .build/derivedData
+  - |
+    if [ $TRAVIS_OS_NAME == "osx" ]; then
+      swift package generate-xcodeproj;
+
+      # Run xcodebuild with coverage enabled
+      xcodebuild test -scheme Kushiro-Package -destination platform="macOS" -enableCodeCoverage YES -derivedDataPath .build/derivedData;
     else
       swift test;
     fi
   # Kill background echo job
   - kill %1
 after_success:
-  - if [ $TRAVIS_OS_NAME == "osx" ]; then
+  - |
+    if [ $TRAVIS_OS_NAME == "osx" ]; then
       bash <(curl -s https://codecov.io/bash) -J '^Kushiro$' -D .build/derivedData;
     fi
