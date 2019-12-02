@@ -94,9 +94,9 @@ final class RangeDBTests: QuickSpec {
                     expect(ranges[1].end).to(equal(200))
                     expect(ranges[1].value).to(equal(bob))
 
-//                    expect(ranges[2].start).to(equal(200))
-//                    expect(ranges[2].end).to(equal(300))
-//                    expect(ranges[2].value).to(equal(alice))
+                    expect(ranges[2].start).to(equal(200))
+                    expect(ranges[2].end).to(equal(300))
+                    expect(ranges[2].value).to(equal(alice))
                 }
             }
         }
