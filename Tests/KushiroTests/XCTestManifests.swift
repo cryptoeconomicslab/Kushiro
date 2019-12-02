@@ -12,7 +12,8 @@ public func allTests() -> [XCTestCaseEntry] {
 #if !canImport(ObjectiveC)
 public func quickTests() -> [QuickSpec.Type] {
     return [
-        RangeDBTests.self
+        RangeDBTests.self,
+        RangeRecordTests.self
     ]
 }
 #endif
