@@ -49,9 +49,9 @@ script:
       swift package generate-xcodeproj;
 
       # Replace header search paths in xcodeproj until SPM fixes this... https://bugs.swift.org/browse/SR-11804
-      sed -i "" 's/\"upstream\",/\"\$(SRCROOT)\/Sources\/librocksdb\/upstream\",/g' Kushiro.xcodeproj/project.pbxproj;
-      sed -i "" 's/\"upstream\/include\",/\"\$(SRCROOT)\/Sources\/librocksdb\/upstream\/include\",/g' Kushiro.xcodeproj/project.pbxproj;
-      sed -i "" 's/\"upstream\/util\"/\"\$(SRCROOT)\/Sources\/librocksdb\/upstream\/util\"/g' Kushiro.xcodeproj/project.pbxproj;
+      sed -i "" 's/\"upstream\"/\"\$(SRCROOT)\/.build\/checkouts\/rocksdb.swift\/Sources\/librocksdb\/upstream\"/g' Kushiro.xcodeproj/project.pbxproj;
+      sed -i "" 's/\"upstream\/include\"/\"\$(SRCROOT)\/.build\/checkouts\/rocksdb.swift\/Sources\/librocksdb\/upstream\/include\"/g' Kushiro.xcodeproj/project.pbxproj;
+      sed -i "" 's/\"upstream\/util\"/\"\$(SRCROOT)\/.build\/checkouts\/rocksdb.swift\/Sources\/librocksdb\/upstream\/util\"/g' Kushiro.xcodeproj/project.pbxproj;
 
       # Run xcodebuild with coverage enabled
       xcodebuild test -scheme Kushiro-Package -destination platform="macOS" -enableCodeCoverage YES -derivedDataPath .build/derivedData;
