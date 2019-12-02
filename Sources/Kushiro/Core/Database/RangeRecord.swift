@@ -49,20 +49,20 @@ extension RangeRecord: Codable {
 
         self.start = try Self.keyFromString(string: container.decode(String.self, forKey: .start))
         self.end = try Self.keyFromString(string: container.decode(String.self, forKey: .end))
-        self.value = try Self.keyFromString(string: container.decode(String.self, forKey: .end))
+        self.value = try Self.keyFromString(string: container.decode(String.self, forKey: .value))
     }
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
 
-        try container.encode(stringFromKey(key: start), forKey: .start)
-        try container.encode(stringFromKey(key: end), forKey: .end)
-        try container.encode(stringFromKey(key: value), forKey: .value)
+        try container.encode(Self.stringFromKey(key: start), forKey: .start)
+        try container.encode(Self.stringFromKey(key: end), forKey: .end)
+        try container.encode(Self.stringFromKey(key: value), forKey: .value)
     }
 
     // MARK: - Helper functions
 
-    private func stringFromKey<Key: RocksDBValueConvertible>(key: Key) throws -> String {
+    private static func stringFromKey<Key: RocksDBValueConvertible>(key: Key) throws -> String {
         let converted = try key.makeData()
 
         return converted.hexEncodedString()

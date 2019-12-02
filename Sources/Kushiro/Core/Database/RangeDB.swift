@@ -21,7 +21,7 @@ public struct RangeDB: RangeStore {
         self.jsonDecoder = jsonDecoder
     }
 
-    public func get<Key: SignedInteger & RocksDBValueConvertible, Value: RocksDBValueConvertible>(start: Key, end: Key) throws -> [RangeRecord<Key, Value>] {
+    public func get<Key: SignedInteger & RocksDBValueConvertible, Value: RocksDBValueConvertible>(valueType: Value.Type, start: Key, end: Key) throws -> [RangeRecord<Key, Value>] {
         let startStr = try stringFromKey(key: start)
         let iterator = try kvs.sequence(valueType: Data.self, gte: startStr).makeIterator()
 
