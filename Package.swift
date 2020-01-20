@@ -13,8 +13,8 @@ let package = Package(
     ],
     dependencies: [
         // Core dependencies
-        .package(url: "https://github.com/Ybrin/rocksdb.swift.git", from: "6.4.9"),
-        .package(url: "https://github.com/Boilertalk/Web3.swift.git", from: "0.4.1"),
+        .package(url: "https://github.com/Ybrin/rocksdb.swift.git", from: "6.4.15"),
+        .package(url: "https://github.com/Boilertalk/Web3.swift.git", from: "0.4.2"),
 
         // Test dependencies
         .package(url: "https://github.com/Quick/Quick.git", from: "2.2.0"),
