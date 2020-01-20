@@ -13,7 +13,8 @@ let package = Package(
     ],
     dependencies: [
         // Core dependencies
-        .package(url: "https://github.com/Ybrin/rocksdb.swift.git", from: "6.4.9"),
+        .package(url: "https://github.com/Ybrin/rocksdb.swift.git", from: "6.4.15"),
+        .package(url: "https://github.com/Boilertalk/Web3.swift.git", from: "0.4.2"),
 
         // Test dependencies
         .package(url: "https://github.com/Quick/Quick.git", from: "2.2.0"),
@@ -24,7 +25,7 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "Kushiro",
-            dependencies: ["RocksDB"],
+            dependencies: ["RocksDB", "Web3", "Web3PromiseKit"],
             path: "Sources/Kushiro",
             sources: ["Core"]),
         .testTarget(

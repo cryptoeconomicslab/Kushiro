@@ -31,5 +31,8 @@ the plasma group. Developed by Cryptoeconomicslab.
     ss.source_files = 'Sources/Kushiro/Core/**/*'
 
     # Core dependencies
+    ss.dependency 'Web3', '~> 0.4'
+    ss.dependency 'Web3/PromiseKit', '~> 0.4'
+    ss.dependency 'rocksdb.swift', '~> 6.4'
   end
 end
