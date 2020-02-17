@@ -21,6 +21,17 @@ public class AddressTreeNode: MerkleTreeNode {
         case dataLength(message: String)
     }
 
+    public static func decode(data: Data) throws -> AddressTreeNode {
+        guard data.count == 64 else {
+            throw Error.dataLength(message: "bytes are not 64 bytes")
+        }
+        let rawBytes = [UInt8](data)
+
+        let address = try EthereumAddress(Array(rawBytes[32...]))
+
+        return try AddressTreeNode(address: address, data: Data(Array(rawBytes[0..<32])))
+    }
+
     /// Creates a new instance of `AddressTreeNode` with the given address and data.
     ///
     /// Data has to be exactly 32 bytes.

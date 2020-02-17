@@ -8,11 +8,21 @@
 import Foundation
 import CryptoSwift
 
-public protocol AbstractMerkleTree: MerkleTreeInterface {
+public protocol GenericMerkleTree: MerkleTreeProtocol where T.T == B {
+
+    associatedtype B
+
+    associatedtype T
+
+    associatedtype Verifier: GenericMerkleVerifier where Verifier.B == B, Verifier.T == T
 
     var levels: [[T]] { get set }
 
     var leaves: [T] { get }
+
+    var verifier: Verifier { get }
+
+    init(leaves: [T], verifier: Verifier)
 
     func calculateRoot(leaves: [T], level: Int)
 
@@ -22,31 +32,16 @@ public protocol AbstractMerkleTree: MerkleTreeInterface {
 
     func getLeaf(index: Int) -> T
 
-    func getInclusionProof(index: Int) -> InclusionProof<T>
+    func getInclusionProof(index: Int) -> InclusionProof<B, T>
 
     func getSiblingIndex(index: Int) -> Int
 
     func getParentIndex(index: Int) -> Int
 }
 
-extension AbstractMerkleTree {
+extension GenericMerkleTree {
 
     public mutating func calculateRoot(leaves: [T], level: Int) {
-//        this.levels[level] = leaves
-//        if (leaves.length <= 1) {
-//          return
-//        }
-//        const parents: T[] = []
-//        ArrayUtils.chunk(leaves, 2).forEach(c => {
-//          if (c.length == 1) {
-//            parents.push(
-//              this.verifier.computeParent(c[0], this.verifier.createEmptyNode())
-//            )
-//          } else {
-//            parents.push(this.verifier.computeParent(c[0], c[1]))
-//          }
-//        })
-//        this.calculateRoot(parents, level + 1)
         levels[level] = leaves
         if leaves.count <= 1 {
             return
@@ -55,58 +50,113 @@ extension AbstractMerkleTree {
         var parents = [T]()
         for i in stride(from: 0, to: leaves.count, by: 2) {
             if i + 1 < leaves.count - 1 {
-//                parents.append(verifier.computeParent(a: leaves[i], b: leaves[i + 1]))
+                parents.append(verifier.computeParent(a: leaves[i], b: leaves[i + 1]))
+            } else {
+                parents.append(verifier.computeParent(a: leaves[i], b: verifier.createEmptyNode()))
             }
         }
     }
+
+    public func getRoot() -> Data {
+        return levels[levels.count - 1][0].data
+    }
+
+    public func findIndex(leaf: Data) -> Int? {
+        let index = leaves.firstIndex { l in
+            return l.data == leaf
+        }
+
+        return index
+    }
+
+    public func getLeaf(index: Int) -> T {
+        return leaves[index]
+    }
+
+    public func getInclusionProof(index: Int) -> InclusionProof<B, T> {
+        var inclusionProofElement = [T]()
+        var parentIndex: Int
+        var siblingIndex = getSiblingIndex(index: index)
+
+        for i in 0..<levels.count {
+            let level = levels[i]
+            let node = level[safe: siblingIndex] ?? verifier.createEmptyNode()
+            inclusionProofElement.append(node)
+            // Calculate parent index and its sibling index
+            parentIndex = getParentIndex(index: siblingIndex)
+            siblingIndex = getSiblingIndex(index: parentIndex)
+        }
+
+        return InclusionProof(leafIndex: levels[0][index].getInterval(), leafPosition: index, siblings: inclusionProofElement)
+    }
+
+    ///
+    /// Calculates sibling index
+    ///
+    /// p
+    ///
+    /// / \
+    ///
+    /// i  sibling
+    ///
+    /// - parameter index: The index to search the sibling from
+    /// - returns: Sibling index of `index`.
+    public func getSiblingIndex(index: Int) -> Int {
+        return index + (index % 2 == 0 ? 1 : -1)
+    }
+
+    ///
+    /// Calculates parent index
+    ///
+    /// parent
+    ///
+    /// / \
+    ///
+    /// i  s
+    ///
+    /// - parameter index: The index to search the parent from
+    /// - returns: Parent index of `index`.
+    public func getParentIndex(index: Int) -> Int {
+        return index == 0 ? 0 : Int(floor(Double(index / 2)))
+    }
 }
 
-public protocol ComparableMerkleTreeNode: MerkleTreeNode where T: Comparable {
-}
-
-public enum AbstractMerkleVerifierError: Swift.Error {
+public enum GenericMerkleVerifierError: Swift.Error {
 
     case invalidRange(message: String)
     case invalidIntersection(message: String)
 }
 
-public protocol AbstractMerkleVerifier: Comparable {
+public protocol GenericMerkleVerifier: Comparable {
 
-    associatedtype T: ComparableMerkleTreeNode
+    associatedtype B where B: Comparable
+
+    associatedtype T: MerkleTreeNode where T.T == B, T: Comparable
 
     var hashAlgorithm: SHA3.Variant { get }
 
     func verifyInclusion(
       leaf: T,
-      intervalStart: T.T,
-      intervalEnd: T.T,
+      intervalStart: B,
+      intervalEnd: B,
       root: Data,
-      inclusionProof: InclusionProof<T>
+      inclusionProof: InclusionProof<B, T>
     ) throws -> Bool
 
     func computeRootFromInclusionProof(
       leaf: T,
       merklePath: String,
       proofElement: [T]
-    ) throws -> (root: Data, implicitEnd: T.T)
+    ) throws -> (root: Data, implicitEnd: B)
 
-    func calculateMerklePath(inclusionProof: InclusionProof<T>) -> String
+    func calculateMerklePath(inclusionProof: InclusionProof<B, T>) -> String
 
     func computeParent(a: T, b: T) -> T
 
     func createEmptyNode() -> T
 }
 
-extension AbstractMerkleVerifier {
-
-    /**
-     * verify inclusion of the leaf in certain range
-     * @param leaf The leaf which is included in tree
-     * @param intervalStart The start of range where the leaf is included in
-     * @param intervalEnd The end of range where the leaf is included in
-     * @param root Root hash of tree
-     * @param inclusionProof Proof data to verify inclusion of the leaf
-     */
+extension GenericMerkleVerifier {
 
     /// Verify inclusion of the leaf in certain range
     ///
@@ -115,12 +165,12 @@ extension AbstractMerkleVerifier {
     /// - parameter intervalEnd: The end of range where the leaf is included in
     /// - parameter root: Root hash of tree
     /// - parameter inclusionProof: Proof data to verify inclusion of the leaf
-    public func verifyInclusion(
+    func verifyInclusion(
       leaf: T,
-      intervalStart: T.T,
-      intervalEnd: T.T,
+      intervalStart: B,
+      intervalEnd: B,
       root: Data,
-      inclusionProof: InclusionProof<T>
+      inclusionProof: InclusionProof<B, T>
     ) throws -> Bool {
         let merklePath = calculateMerklePath(inclusionProof: inclusionProof)
         let computeIntervalRootAndEnd = try computeRootFromInclusionProof(
@@ -130,17 +180,17 @@ extension AbstractMerkleVerifier {
         )
 
         if computeIntervalRootAndEnd.implicitEnd < intervalEnd || intervalStart < leaf.getInterval() {
-            throw AbstractMerkleVerifierError.invalidRange(message: "required range must not exceed the implicit range")
+            throw GenericMerkleVerifierError.invalidRange(message: "required range must not exceed the implicit range")
         }
 
         return computeIntervalRootAndEnd.root == root
     }
 
-    public func computeRootFromInclusionProof(
+    func computeRootFromInclusionProof(
       leaf: T,
       merklePath: String,
       proofElement: [T]
-    ) throws -> (root: Data, implicitEnd: T.T) {
+    ) throws -> (root: Data, implicitEnd: B) {
         let firstIndex = merklePath.firstIndex(of: "0")
         let firstRightSiblingIndex: Int? = firstIndex != nil ? merklePath.distance(from: merklePath.startIndex, to: firstIndex!) : nil
         let firstRightSibling = firstRightSiblingIndex != nil ? proofElement[firstRightSiblingIndex!] : nil
@@ -159,7 +209,7 @@ extension AbstractMerkleVerifier {
                 right = sibling
 
                 if firstRightSibling != nil && right.getInterval() < firstRightSibling!.getInterval() {
-                    throw AbstractMerkleVerifierError.invalidIntersection(message: "invalid InclusionProof, intersection detected")
+                    throw GenericMerkleVerifierError.invalidIntersection(message: "invalid InclusionProof, intersection detected")
                 }
             }
             // check left.index < right.index
@@ -170,7 +220,7 @@ extension AbstractMerkleVerifier {
         return (root: computed.data, implicitEnd: implicitEnd)
     }
 
-    func calculateMerklePath(inclusionProof: InclusionProof<T>) -> String {
+    func calculateMerklePath(inclusionProof: InclusionProof<B, T>) -> String {
         return String(
             String(inclusionProof.leafPosition, radix: 2)
                 .padding(toLength: inclusionProof.siblings.count, withPad: "0", startingAt: 0)
