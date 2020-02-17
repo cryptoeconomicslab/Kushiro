@@ -2,7 +2,7 @@
 //  IntervalTree.swift
 //  Kushiro
 //
-//  Created by Koray Koska on 17.02.20.
+//  Created by Koray Koska on 17.01.20.
 //
 
 import Foundation
