@@ -7,9 +7,11 @@
 
 import Foundation
 import Web3
+import CryptoSwift
 
 public class AddressTreeNode: MerkleTreeNode {
 
+    // TODO: We should use a more abstract Address type here. Not EthereumAddress.
     public typealias T = EthereumAddress
 
     public let address: EthereumAddress
@@ -63,4 +65,67 @@ public class AddressTreeNode: MerkleTreeNode {
     }
 }
 
-public typealias AddressTreeInclusionProof = InclusionProof<AddressTreeNode>
+public typealias AddressTreeInclusionProof = InclusionProof<EthereumAddress, AddressTreeNode>
+
+public class AddressTree: GenericMerkleTree {
+
+    public typealias I = EthereumAddress
+
+    public typealias B = EthereumAddress
+
+    public typealias T = AddressTreeNode
+
+    public typealias Verifier = AddressTreeVerifier
+
+    public var levels: [[AddressTreeNode]] = []
+
+    public let leaves: [AddressTreeNode]
+
+    public let verifier: AddressTreeVerifier
+
+    public required init(leaves: [AddressTreeNode], verifier: AddressTreeVerifier = AddressTreeVerifier()) {
+        self.leaves = leaves
+        self.verifier = verifier
+    }
+
+    public func getIndexByAddress(address: EthereumAddress) -> Int? {
+        let index = leaves.firstIndex { l in
+            return l.address.rawAddress == address.rawAddress
+        }
+
+        return index
+    }
+}
+
+public class AddressTreeVerifier: GenericMerkleVerifier {
+
+    public typealias B = EthereumAddress
+
+    public typealias T = AddressTreeNode
+
+    public init() {
+    }
+
+    public func computeParent(a: AddressTreeNode, b: AddressTreeNode) -> AddressTreeNode {
+        var toHash = a.encode()
+        toHash.append(b.encode())
+        let hash = SHA3(variant: hashAlgorithm).calculate(for: [UInt8](toHash))
+
+        // Force unwrapping is ok as our hash call above must return 32 bytes
+        return try! AddressTreeNode(address: a.address, data: Data(hash))
+    }
+
+    public func createEmptyNode() -> AddressTreeNode {
+        // TODO: empty node shouldn't be zero address?
+        return try! AddressTreeNode(address: EthereumAddress([UInt8](repeating: 0, count: 20)), data: Data([UInt8](repeating: 0, count: 32)))
+    }
+}
+
+// TODO: Check this
+
+extension EthereumAddress: Comparable {
+
+    public static func < (lhs: EthereumAddress, rhs: EthereumAddress) -> Bool {
+        return lhs.hex(eip55: false) < rhs.hex(eip55: false)
+    }
+}

@@ -24,7 +24,7 @@ public protocol GenericMerkleTree: MerkleTreeProtocol where T.T == B {
 
     init(leaves: [T], verifier: Verifier)
 
-    func calculateRoot(leaves: [T], level: Int)
+    mutating func calculateRoot(leaves: [T], level: Int)
 
     func getRoot() -> Data
 
@@ -127,11 +127,11 @@ public enum GenericMerkleVerifierError: Swift.Error {
     case invalidIntersection(message: String)
 }
 
-public protocol GenericMerkleVerifier: Comparable {
+public protocol GenericMerkleVerifier {
 
     associatedtype B where B: Comparable
 
-    associatedtype T: MerkleTreeNode where T.T == B, T: Comparable
+    associatedtype T: MerkleTreeNode where T.T == B
 
     var hashAlgorithm: SHA3.Variant { get }
 
@@ -158,6 +158,10 @@ public protocol GenericMerkleVerifier: Comparable {
 
 extension GenericMerkleVerifier {
 
+    public var hashAlgorithm: SHA3.Variant {
+        return .keccak256
+    }
+
     /// Verify inclusion of the leaf in certain range
     ///
     /// - parameter leaf: The leaf which is included in tree
@@ -165,7 +169,7 @@ extension GenericMerkleVerifier {
     /// - parameter intervalEnd: The end of range where the leaf is included in
     /// - parameter root: Root hash of tree
     /// - parameter inclusionProof: Proof data to verify inclusion of the leaf
-    func verifyInclusion(
+    public func verifyInclusion(
       leaf: T,
       intervalStart: B,
       intervalEnd: B,
@@ -186,7 +190,7 @@ extension GenericMerkleVerifier {
         return computeIntervalRootAndEnd.root == root
     }
 
-    func computeRootFromInclusionProof(
+    public func computeRootFromInclusionProof(
       leaf: T,
       merklePath: String,
       proofElement: [T]
@@ -220,7 +224,7 @@ extension GenericMerkleVerifier {
         return (root: computed.data, implicitEnd: implicitEnd)
     }
 
-    func calculateMerklePath(inclusionProof: InclusionProof<B, T>) -> String {
+    public func calculateMerklePath(inclusionProof: InclusionProof<B, T>) -> String {
         return String(
             String(inclusionProof.leafPosition, radix: 2)
                 .padding(toLength: inclusionProof.siblings.count, withPad: "0", startingAt: 0)
