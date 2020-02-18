@@ -59,3 +59,6 @@ public struct InclusionProof<I, T: MerkleTreeNode> where T.T == I {
 
 extension InclusionProof: Codable where I: Codable, T: Codable {
 }
+
+extension InclusionProof: Equatable where I: Equatable, T: Equatable {
+}

@@ -23,9 +23,11 @@ public class IntervalTreeNode: MerkleTreeNode {
     }
 
     public static func decode(data: Data) throws -> IntervalTreeNode {
+        // TODO: This seems like total garbage to me. But its 02:17 so please check this again...
+        //       --- (the hash of the address is 20 bytes right? or even dynamic for non ethereum?)
         // 32 bytes in hex are 64 characters (bytes), which is the max we allow right now. plus 32 bytes hash
-        guard data.count <= 96 else {
-            throw Error.dataLength(message: "too many bytes")
+        guard data.count > 32 else {
+            throw Error.dataLength(message: "bytes are not more than 32 bytes")
         }
         let rawBytes = [UInt8](data)
 
@@ -60,7 +62,7 @@ public class IntervalTreeNode: MerkleTreeNode {
         var encoding = data
         // Force unwrap is ok because of .utf8 encoding
         // see: https://www.objc.io/blog/2018/02/13/string-to-data-and-back/
-        encoding.append(contentsOf: String(start, radix: 16).lowercased().data(using: .utf8)!)
+        encoding.append(contentsOf: String(start, radix: 16).lowercased().paddingLeft(toLength: 32, withPad: "0").data(using: .utf8)!)
 
         return encoding
     }
@@ -87,6 +89,11 @@ public class IntervalTree: GenericMerkleTree {
     public required init(leaves: [IntervalTreeNode], verifier: IntervalTreeVerifier = IntervalTreeVerifier()) {
         self.leaves = leaves
         self.verifier = verifier
+
+        // TODO: Pls change this :(
+        var this = self
+        this.calculateRoot(leaves: leaves, level: 0)
+        self.levels = this.levels
     }
 
     public func getLeaves(start: Int, end: Int) -> [Int] {

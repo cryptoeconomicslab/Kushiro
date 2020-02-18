@@ -42,19 +42,25 @@ public protocol GenericMerkleTree: MerkleTreeProtocol where T.T == B {
 extension GenericMerkleTree {
 
     public mutating func calculateRoot(leaves: [T], level: Int) {
-        levels[level] = leaves
+        if levels.count > level {
+            levels[level] = leaves
+        } else {
+            levels.append(leaves)
+        }
         if leaves.count <= 1 {
             return
         }
 
         var parents = [T]()
         for i in stride(from: 0, to: leaves.count, by: 2) {
-            if i + 1 < leaves.count - 1 {
+            if i + 1 < leaves.count {
                 parents.append(verifier.computeParent(a: leaves[i], b: leaves[i + 1]))
             } else {
                 parents.append(verifier.computeParent(a: leaves[i], b: verifier.createEmptyNode()))
             }
         }
+
+        calculateRoot(leaves: parents, level: level + 1)
     }
 
     public func getRoot() -> Data {
@@ -78,7 +84,7 @@ extension GenericMerkleTree {
         var parentIndex: Int
         var siblingIndex = getSiblingIndex(index: index)
 
-        for i in 0..<levels.count {
+        for i in 0..<(levels.count - 1) {
             let level = levels[i]
             let node = level[safe: siblingIndex] ?? verifier.createEmptyNode()
             inclusionProofElement.append(node)

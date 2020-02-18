@@ -24,8 +24,8 @@ public class AddressTreeNode: MerkleTreeNode {
     }
 
     public static func decode(data: Data) throws -> AddressTreeNode {
-        guard data.count == 64 else {
-            throw Error.dataLength(message: "bytes are not 64 bytes")
+        guard data.count > 32 else {
+            throw Error.dataLength(message: "bytes are not more than 32 bytes")
         }
         let rawBytes = [UInt8](data)
 
@@ -57,11 +57,16 @@ public class AddressTreeNode: MerkleTreeNode {
 
     public func encode() -> Data {
         var encoding = data
-        // Force unwrap is ok because of .utf8 encoding
-        // see: https://www.objc.io/blog/2018/02/13/string-to-data-and-back/
-        encoding.append(contentsOf: address.hex(eip55: false).data(using: .utf8)!)
+        encoding.append(contentsOf: address.rawAddress)
 
         return encoding
+    }
+}
+
+extension AddressTreeNode: Equatable {
+
+    public static func == (lhs: AddressTreeNode, rhs: AddressTreeNode) -> Bool {
+        return lhs.address == rhs.address && lhs.data == rhs.data
     }
 }
 
@@ -86,6 +91,11 @@ public class AddressTree: GenericMerkleTree {
     public required init(leaves: [AddressTreeNode], verifier: AddressTreeVerifier = AddressTreeVerifier()) {
         self.leaves = leaves
         self.verifier = verifier
+
+        // TODO: Pls change this :(
+        var this = self
+        this.calculateRoot(leaves: leaves, level: 0)
+        self.levels = this.levels
     }
 
     public func getIndexByAddress(address: EthereumAddress) -> Int? {
@@ -126,6 +136,6 @@ public class AddressTreeVerifier: GenericMerkleVerifier {
 extension EthereumAddress: Comparable {
 
     public static func < (lhs: EthereumAddress, rhs: EthereumAddress) -> Bool {
-        return lhs.hex(eip55: false) < rhs.hex(eip55: false)
+        return lhs.customHex() < rhs.customHex()
     }
 }

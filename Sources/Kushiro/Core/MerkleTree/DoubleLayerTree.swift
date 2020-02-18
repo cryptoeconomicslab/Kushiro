@@ -52,7 +52,7 @@ public class DoubleLayerTreeLeaf: MerkleTreeNode {
         var encoding = data
         // Force unwrap is ok because of .utf8 encoding
         // see: https://www.objc.io/blog/2018/02/13/string-to-data-and-back/
-        encoding.append(contentsOf: address.hex(eip55: false).data(using: .utf8)!)
+        encoding.append(contentsOf: address.customHex().data(using: .utf8)!)
 
         return encoding
     }
@@ -94,12 +94,12 @@ public class DoubleLayerTree: MerkleTreeProtocol {
         let addressLeavesMap = leaves.reduce([:] as [String: [IntervalTreeNode]]) { result, leaf in
             var result = result
 
-            let address = leaf.address.hex(eip55: false)
+            let addressStr = leaf.address.customHex()
 
-            var map = result[address] ?? []
+            var map = result[addressStr] ?? []
             map.append(try! IntervalTreeNode(start: leaf.start, data: leaf.data))
 
-            result[address] = map
+            result[addressStr] = map
 
             return result
         }
@@ -133,13 +133,13 @@ public class DoubleLayerTree: MerkleTreeProtocol {
     }
 
     public func getLeaves(address: EthereumAddress, start: Int, end: Int) -> [Int] {
-        let tree = intervalTreeMap[address.hex(eip55: false)]
+        let tree = intervalTreeMap[address.customHex()]
 
         return tree?.getLeaves(start: start, end: end) ?? []
     }
 
     public func getInclusionProofByAddressAndIndex(address: EthereumAddress, index: Int) -> DoubleLayerInclusionProof? {
-        if let addressTreeIndex = addressTree.getIndexByAddress(address: address), let intervalTree = intervalTreeMap[address.hex(eip55: false)] {
+        if let addressTreeIndex = addressTree.getIndexByAddress(address: address), let intervalTree = intervalTreeMap[address.customHex()] {
             let addressInclusionProof = addressTree.getInclusionProof(index: addressTreeIndex)
             let intervalInclusionProof = intervalTree.getInclusionProof(index: index)
 
