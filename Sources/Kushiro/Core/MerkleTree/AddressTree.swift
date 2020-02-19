@@ -88,13 +88,13 @@ public class AddressTree: GenericMerkleTree {
 
     public let verifier: AddressTreeVerifier
 
-    public required init(leaves: [AddressTreeNode], verifier: AddressTreeVerifier = AddressTreeVerifier()) {
+    public required init(leaves: [AddressTreeNode], verifier: AddressTreeVerifier = AddressTreeVerifier()) throws {
         self.leaves = leaves
         self.verifier = verifier
 
         // TODO: Pls change this :(
         var this = self
-        this.calculateRoot(leaves: leaves, level: 0)
+        try this.calculateRoot(leaves: leaves, level: 0)
         self.levels = this.levels
     }
 

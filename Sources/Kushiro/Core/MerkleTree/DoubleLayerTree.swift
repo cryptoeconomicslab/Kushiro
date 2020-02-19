@@ -22,11 +22,11 @@ public struct DoubleLayerInclusionProof {
 
 public struct DoubleLayerInterval {
 
-    let start: Int
+    let start: BigInt
 
     let address: EthereumAddress
 
-    public init(start: Int, address: EthereumAddress) {
+    public init(start: BigInt, address: EthereumAddress) {
         self.start = start
         self.address = address
     }
@@ -38,11 +38,11 @@ public class DoubleLayerTreeLeaf: MerkleTreeNode {
 
     public let address: EthereumAddress
 
-    public let start: Int
+    public let start: BigInt
 
     public let data: Data
 
-    public init(address: EthereumAddress, start: Int, data: Data) {
+    public init(address: EthereumAddress, start: BigInt, data: Data) {
         self.address = address
         self.start = start
         self.data = data
@@ -63,8 +63,8 @@ public class DoubleLayerTreeLeaf: MerkleTreeNode {
 }
 
 /// Can be used as a `MerkleTreeGenerator<DoubleLayerInterval, DoubleLayerTreeLeaf>`
-public func generateDoubleLayerTree(leaves: [DoubleLayerTreeLeaf]) -> DoubleLayerTree {
-    return DoubleLayerTree(leaves: leaves)
+public func generateDoubleLayerTree(leaves: [DoubleLayerTreeLeaf]) throws -> DoubleLayerTree {
+    return try DoubleLayerTree(leaves: leaves)
 }
 
 /**
@@ -86,7 +86,7 @@ public class DoubleLayerTree: MerkleTreeProtocol {
 
     private let leaves: [DoubleLayerTreeLeaf]
 
-    public init(leaves: [DoubleLayerTreeLeaf]) {
+    public init(leaves: [DoubleLayerTreeLeaf]) throws {
         self.leaves = leaves
 
         var addressTreeLeaves = [AddressTreeNode]()
@@ -105,7 +105,7 @@ public class DoubleLayerTree: MerkleTreeProtocol {
         }
 
         for (key, value) in addressLeavesMap {
-            let intervalTree = IntervalTree(leaves: value)
+            let intervalTree = try IntervalTree(leaves: value)
             self.intervalTreeMap[key] = intervalTree
 
             addressTreeLeaves.append(
@@ -113,7 +113,7 @@ public class DoubleLayerTree: MerkleTreeProtocol {
             )
         }
 
-        self.addressTree = AddressTree(leaves: addressTreeLeaves)
+        self.addressTree = try AddressTree(leaves: addressTreeLeaves)
     }
 
     public func getRoot() -> Data {
@@ -132,7 +132,7 @@ public class DoubleLayerTree: MerkleTreeProtocol {
         fatalError("not implemented")
     }
 
-    public func getLeaves(address: EthereumAddress, start: Int, end: Int) -> [Int] {
+    public func getLeaves(address: EthereumAddress, start: BigInt, end: BigInt) -> [Int] {
         let tree = intervalTreeMap[address.customHex()]
 
         return tree?.getLeaves(start: start, end: end) ?? []

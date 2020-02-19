@@ -18,7 +18,7 @@ public protocol MerkleTreeNode {
     func encode() -> Data
 }
 
-public typealias MerkleTreeGenerator<I, T, S: MerkleTreeProtocol> = (_ leaves: [T]) -> S where T.T == I, S.I == I, S.T == T
+public typealias MerkleTreeGenerator<I, T, S: MerkleTreeProtocol> = (_ leaves: [T]) throws -> S where T.T == I, S.I == I, S.T == T
 
 public protocol MerkleTreeProtocol {
 

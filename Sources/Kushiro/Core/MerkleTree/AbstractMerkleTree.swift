@@ -22,9 +22,9 @@ public protocol GenericMerkleTree: MerkleTreeProtocol where T.T == B {
 
     var verifier: Verifier { get }
 
-    init(leaves: [T], verifier: Verifier)
+    init(leaves: [T], verifier: Verifier) throws
 
-    mutating func calculateRoot(leaves: [T], level: Int)
+    mutating func calculateRoot(leaves: [T], level: Int) throws
 
     func getRoot() -> Data
 
@@ -41,7 +41,7 @@ public protocol GenericMerkleTree: MerkleTreeProtocol where T.T == B {
 
 extension GenericMerkleTree {
 
-    public mutating func calculateRoot(leaves: [T], level: Int) {
+    public mutating func calculateRoot(leaves: [T], level: Int) throws {
         if levels.count > level {
             levels[level] = leaves
         } else {
@@ -54,13 +54,13 @@ extension GenericMerkleTree {
         var parents = [T]()
         for i in stride(from: 0, to: leaves.count, by: 2) {
             if i + 1 < leaves.count {
-                parents.append(verifier.computeParent(a: leaves[i], b: leaves[i + 1]))
+                parents.append(try verifier.computeParent(a: leaves[i], b: leaves[i + 1]))
             } else {
-                parents.append(verifier.computeParent(a: leaves[i], b: verifier.createEmptyNode()))
+                parents.append(try verifier.computeParent(a: leaves[i], b: verifier.createEmptyNode()))
             }
         }
 
-        calculateRoot(leaves: parents, level: level + 1)
+        try calculateRoot(leaves: parents, level: level + 1)
     }
 
     public func getRoot() -> Data {
@@ -157,7 +157,7 @@ public protocol GenericMerkleVerifier {
 
     func calculateMerklePath(inclusionProof: InclusionProof<B, T>) -> String
 
-    func computeParent(a: T, b: T) -> T
+    func computeParent(a: T, b: T) throws -> T
 
     func createEmptyNode() -> T
 }
@@ -223,7 +223,7 @@ extension GenericMerkleVerifier {
                 }
             }
             // check left.index < right.index
-            computed = computeParent(a: left, b: right)
+            computed = try computeParent(a: left, b: right)
         }
 
         let implicitEnd = firstRightSibling != nil ? firstRightSibling!.getInterval() : createEmptyNode().getInterval()
@@ -233,7 +233,7 @@ extension GenericMerkleVerifier {
     public func calculateMerklePath(inclusionProof: InclusionProof<B, T>) -> String {
         return String(
             String(inclusionProof.leafPosition, radix: 2)
-                .padding(toLength: inclusionProof.siblings.count, withPad: "0", startingAt: 0)
+                .paddingLeft(toLength: inclusionProof.siblings.count, withPad: "0")
                 .reversed()
         )
     }
