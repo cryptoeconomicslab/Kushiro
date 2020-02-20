@@ -76,6 +76,11 @@ public func generateDoubleLayerTree(leaves: [DoubleLayerTreeLeaf]) throws -> Dou
  */
 public class DoubleLayerTree: MerkleTreeProtocol {
 
+    public enum Error: Swift.Error {
+
+        case leavesEmpty
+    }
+
     public typealias I = DoubleLayerInterval
 
     public typealias T = DoubleLayerTreeLeaf
@@ -87,17 +92,21 @@ public class DoubleLayerTree: MerkleTreeProtocol {
     private let leaves: [DoubleLayerTreeLeaf]
 
     public init(leaves: [DoubleLayerTreeLeaf]) throws {
+        if leaves.count == 0 {
+            throw Error.leavesEmpty
+        }
+
         self.leaves = leaves
 
         var addressTreeLeaves = [AddressTreeNode]()
 
-        let addressLeavesMap = leaves.reduce([:] as [String: [IntervalTreeNode]]) { result, leaf in
+        let addressLeavesMap = try leaves.reduce([:] as [String: [IntervalTreeNode]]) { result, leaf in
             var result = result
 
             let addressStr = leaf.address.customHex()
 
             var map = result[addressStr] ?? []
-            map.append(try! IntervalTreeNode(start: leaf.start, data: leaf.data))
+            map.append(try IntervalTreeNode(start: leaf.start, data: leaf.data))
 
             result[addressStr] = map
 
