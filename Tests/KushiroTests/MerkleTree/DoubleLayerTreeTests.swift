@@ -72,6 +72,20 @@ final class DoubleLayerTreeTests: QuickSpec {
                         try DoubleLayerTree(leaves: [leaf0, leaf1, leaf2, invalidLeaf])
                     }.to(throwError(IntervalTreeNode.Error.dataLength(message: "data length is not 32 bytes")))
                 }
+
+                it("should return merkle root") {
+                    let tree = try! DoubleLayerTree(leaves: [leaf0, leaf1, leaf2])
+                    let root = tree.getRoot()
+
+                    expect(root.hexEncodedString()).to(equal("3ec5a3c49278e6d89a313d2f8716b1cf62534f3c31fdcade30809fd90ee47368"))
+                }
+
+                it("should return merkle root with leaves that belongs to multiple address") {
+                    let tree = try! DoubleLayerTree(leaves: [leaf0, leaf1, leaf2, leaf3, leaf10, leaf11])
+                    let root = tree.getRoot()
+
+                    expect(root.toHexString()).to(equal("1aa3429d5aa7bf693f3879fdfe0f1a979a4b49eaeca9638fea07ad7ee5f0b64f"))
+                }
             }
         }
     }

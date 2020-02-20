@@ -100,15 +100,20 @@ public class DoubleLayerTree: MerkleTreeProtocol {
 
         var addressTreeLeaves = [AddressTreeNode]()
 
-        let addressLeavesMap = try leaves.reduce([:] as [String: [IntervalTreeNode]]) { result, leaf in
+        let addressLeavesMap = try leaves.reduce([] as [(key: String, value: [IntervalTreeNode])]) { result, leaf in
             var result = result
 
             let addressStr = leaf.address.customHex()
 
-            var map = result[addressStr] ?? []
+            let mapIndex = result.firstIndex(where: { $0.key == addressStr })
+            var map = mapIndex != nil ? result[mapIndex!].value : []
             map.append(try IntervalTreeNode(start: leaf.start, data: leaf.data))
 
-            result[addressStr] = map
+            if let mapIndex = mapIndex {
+                result[mapIndex] = (key: addressStr, value: map)
+            } else {
+                result.append((key: addressStr, value: map))
+            }
 
             return result
         }
@@ -118,7 +123,7 @@ public class DoubleLayerTree: MerkleTreeProtocol {
             self.intervalTreeMap[key] = intervalTree
 
             addressTreeLeaves.append(
-                try! AddressTreeNode(address: EthereumAddress(hex: key, eip55: false), data: intervalTree.getRoot())
+                try AddressTreeNode(address: EthereumAddress(hex: key, eip55: false), data: intervalTree.getRoot())
             )
         }
 
