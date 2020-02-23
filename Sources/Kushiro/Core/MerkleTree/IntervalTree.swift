@@ -113,7 +113,7 @@ public class IntervalTree: GenericMerkleTree {
             let targetEnd = leaves[safe: i + 1]?.start ?? BigInt.max256Bit
 
             let maxStart = max(targetStart, start)
-            let maxEnd = max(targetEnd, end)
+            let maxEnd = min(targetEnd, end)
 
             if maxStart < maxEnd {
                 results.append(i)

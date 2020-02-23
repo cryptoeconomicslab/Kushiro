@@ -8,7 +8,7 @@
 import Foundation
 import Web3
 
-public struct DoubleLayerInclusionProof {
+public struct DoubleLayerInclusionProof: Equatable {
 
     let intervalInclusionProof: IntervalTreeInclusionProof
 
