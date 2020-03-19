@@ -20,6 +20,7 @@ xcode_sdk: iphonesimulator13.2
 before_install:
   - if [ $TRAVIS_OS_NAME == "osx" ]; then instruments -s devices; fi
   - if [ $TRAVIS_OS_NAME == "osx" ]; then gem install cocoapods; fi # Since Travis is not always on latest version
+  - if [ $TRAVIS_OS_NAME == "osx" ]; then gem install xcpretty; fi
   - if [ $TRAVIS_OS_NAME == "osx" ]; then pod repo update; fi
   - |
     if [ $TRAVIS_OS_NAME == "osx" ]; then
@@ -54,7 +55,7 @@ script:
       sed -i "" 's/\"upstream\/util\"/\"\$(SRCROOT)\/.build\/checkouts\/rocksdb.swift\/Sources\/librocksdb\/upstream\/util\"/g' Kushiro.xcodeproj/project.pbxproj;
 
       # Run xcodebuild with coverage enabled
-      xcodebuild test -scheme Kushiro-Package -destination platform="macOS" -enableCodeCoverage YES -derivedDataPath .build/derivedData;
+      xcodebuild test -scheme Kushiro-Package -destination platform="macOS" -enableCodeCoverage YES -derivedDataPath .build/derivedData | xcpretty;
     else
       swift test;
     fi
