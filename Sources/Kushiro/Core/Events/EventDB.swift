@@ -19,11 +19,11 @@ public struct EventDB {
     public func getLastLoggedBlock(topic: Data) throws -> Int {
         let result: String = try kvs.get(key: topic.hexEncodedString())
 
-        return result == "" ? 0 : Int(result) ?? 0
+        return result == "" ? 0 : Int(result, radix: 10) ?? 0
     }
 
     public func setLastLoggedBlock(topic: Data, loaded: Int) throws {
-        try kvs.put(key: topic.hexEncodedString(), value: "\(loaded)")
+        try kvs.put(key: topic.hexEncodedString(), value: String(loaded, radix: 10))
     }
 
     public func addSeen(event: Data) throws {
